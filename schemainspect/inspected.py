@@ -155,7 +155,15 @@ class ColumnInfo(AutoRepr):
             raise ValueError
 
     def change_enum_statement(self, table_name):
-        if self.is_enum:
+        if self.is_enum_array:
+            return "alter table {} alter column {} type {} [] using {}::text::{} [];".format(
+                table_name,
+                self.name,
+                self.enum.quoted_full_name,
+                self.name,
+                self.enum.quoted_full_name,
+            )
+        elif self.is_enum:
             return "alter table {} alter column {} type {} using {}::text::{};".format(
                 table_name,
                 self.name,

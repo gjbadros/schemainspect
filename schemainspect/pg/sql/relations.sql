@@ -99,6 +99,7 @@ select
     r.oid as oid,
     format_type(atttypid, atttypmod) AS datatypestring,
     (e.enum_oid is not null or ea.enum_array_oid is not null) as is_enum,
+    ea.enum_array_oid is not null as is_enum_array,
     (case when e.enum_oid is not null then e.name
           when ea.enum_array_oid is not null then ea.name
      end) as enum_name,
