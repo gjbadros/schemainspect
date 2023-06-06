@@ -5,7 +5,7 @@ with extension_oids as (
       pg_depend d
   WHERE
       d.refclassid = 'pg_extension'::regclass and
-      d.classid = 'pg_class'::regclass 
+      d.classid = 'pg_class'::regclass
 ), enums as (
 
   SELECT
@@ -22,6 +22,22 @@ with extension_oids as (
     -- SKIP_INTERNAL and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
     -- SKIP_INTERNAL and n.nspname not like 'pg_temp_%' and n.nspname not like 'pg_toast_temp_%'
   ORDER BY 1, 2
+),
+enums_arrays as (
+  SELECT
+    t.oid as enum_array_oid,
+    n.nspname as "schema",
+    substring(t.typname from 2) as name
+  FROM pg_catalog.pg_type t
+       LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+       left outer join extension_oids e
+         on t.oid = e.objid
+  WHERE
+    (t.typcategory = 'A' and t.typelem in (select enum_oid from enums)) and e.objid is null
+    -- SKIP_INTERNAL and n.nspname not in ('pg_catalog', 'information_schema', 'pg_toast')
+    -- SKIP_INTERNAL and n.nspname not like 'pg_temp_%' and n.nspname not like 'pg_toast_temp_%'
+  ORDER BY 1, 2
+
 ),
 r as (
     select
@@ -82,9 +98,13 @@ select
     pg_get_expr(ad.adbin, ad.adrelid) as defaultdef,
     r.oid as oid,
     format_type(atttypid, atttypmod) AS datatypestring,
-    e.enum_oid is not null as is_enum,
-    e.name as enum_name,
-    e.schema as enum_schema,
+    (e.enum_oid is not null or ea.enum_array_oid is not null) as is_enum,
+    (case when e.enum_oid is not null then e.name
+          when ea.enum_array_oid is not null then ea.name
+     end) as enum_name,
+    (case when e.enum_oid is not null then e.schema
+          when ea.enum_array_oid is not null then ea.schema
+     end) as enum_schema,
     pg_catalog.obj_description(r.oid) as comment,
     r.parent_table,
     r.partition_def,
@@ -102,7 +122,9 @@ FROM
         and a.attnum = ad.adnum
     left join enums e
       on a.atttypid = e.enum_oid
-where a.attisdropped is not true
+    left join enums_arrays ea
+      on a.atttypid = ea.enum_array_oid
+where a.attisdropped is not true -- FOR TESTING: and a.attname like 'cap%'
 -- SKIP_INTERNAL and r.schema not in ('pg_catalog', 'information_schema', 'pg_toast')
 -- SKIP_INTERNAL and r.schema not like 'pg_temp_%' and r.schema not like 'pg_toast_temp_%'
 order by relationtype, r.schema, r.name, position_number;
