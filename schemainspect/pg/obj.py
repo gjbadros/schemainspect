@@ -1340,6 +1340,7 @@ class PostgreSQL(DBInspector):
                     default=c.defaultdef,
                     not_null=c.not_null,
                     is_enum=c.is_enum,
+                    is_enum_array=c.is_enum_array,
                     enum=get_enum(c.enum_name, c.enum_schema),
                     collation=c.collation,
                     is_identity=c.is_identity,
