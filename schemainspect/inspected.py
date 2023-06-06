@@ -47,6 +47,7 @@ class ColumnInfo(AutoRepr):
         default=None,
         not_null=False,
         is_enum=False,
+        is_enum_array=False,
         enum=None,
         dbtypestr=None,
         collation=None,
@@ -62,6 +63,7 @@ class ColumnInfo(AutoRepr):
         self.default = default or None
         self.not_null = not_null
         self.is_enum = is_enum
+        self.is_enum_array = is_enum_array
         self.enum = enum
         self.collation = collation
         self.is_identity = is_identity
