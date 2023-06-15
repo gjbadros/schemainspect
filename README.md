@@ -1,3 +1,5 @@
+# gjbadros see my off_3_0_1616029793 branch for what works for me with enum[] support
+
 # `schemainspect`: SQL Schema Inspection
 
 Schema inspection for PostgreSQL (and potentially others in the future).
